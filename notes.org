@@ -1,0 +1,14 @@
+
+
+* Table of nodes
+
+| X | Y |
+|---+---|
+| x | y |
+
+* Table of edges
+
+| Start node | End node | Length |
+|------------+----------+--------|
+| sn         | en       | l      |
+

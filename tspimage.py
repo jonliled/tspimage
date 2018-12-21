@@ -6,7 +6,7 @@ import itertools
 # import pandas as pd
 import numpy as np
 #import travelUtils as tu
-import tkinter as tk
+#import tkinter as tk
 import time
 import os
 import random
@@ -82,19 +82,33 @@ def cost(node1, node2):
 def permutations(edges):
     return itertools.permutations(edges)
 
-def enumerate(edges, screen):
+def enumerate(nodes, screen):
     best_tour = None
     shortest = None
     current = 0
 
+    # Clear screen
+    screen.fill(white)    
+    pygame.display.update()
+    print(nodes)
     print("Creating list of all possible permutations.")
-    if len(edges) >= 10:
+    if len(nodes) >= 10:
         print("This may take a while...")
-    tours = permutations(edges)
-
+    tours = permutations(nodes)
+    tours = list(tours)
+    print(len(tours))
+    print("Done!")
+    
     for tour in tours:
+        if best_tour is not None:
+            for node in best_tour:
+                node.draw(screen, blue)
+        tour.append(tour[0])
+        print("Tour:", tour)
         for edge in tour:
+            print(edge.start, edge.end)
             edge.draw(screen, blue)
+            pygame.display.update()
             current += distance(edge)
         current += distance(tour[1])
 
@@ -104,59 +118,10 @@ def enumerate(edges, screen):
         elif current < shortest:
             shortest = current
             best_tour = tour 
+
+        print("Best route:", best_tour)
+        
             
-        
-        
-
-        
-
-def brute(tours, canvas):
-    costs = [] 
-    cheapest = -1
-    cheapest_tour = None
-    m_tours = []
-    n = 0
-
-    for i in range(len(tours)):
-        current_cost = 0
-        current_tour = []
-        for j in range(len(tours[0])):
-            if j > 0:
-                dist = (cost(tours[i][j], tours[i-1][j-1]))
-                if dist > 0:
-                    current_cost += dist
-                    x1 = tours[i-1][j-1].x
-                    y1 = tours[i-1][j-1].y
-                    x2 = tours[i][j].x
-                    y2 = tours[i][j].y
-                else:
-                    continue
-            current_tour.append(tours[i][j].name)
-            costs.append(current_cost)
-        if cheapest == -1 and len(current_tour) == len(tours[0]):
-            cheapest = current_cost
-            cheapest_tour = current_tour
-            print("Cheapest")
-            print(current_cost, cheapest_tour)
-        elif current_cost <= cheapest and len(current_tour) == len(tours[0]):
-            print("Cheapest")
-            print(current_cost)
-            cheapest = current_cost
-            cheapest_tour = current_tour
-        n += 1
-        print("Tours tested:", n, "/", len(tours))
-        print("Current tour", current_cost, current_tour)
-        print("Shortest so far: ", cheapest, cheapest_tour)
-        os.system('clear')
-    
-    for city in cheapest_tour:
-        print(city)
-    #tu.Draw_Line(canvas, x1, y1, x2, y2)
-
-    print("Tours tested:", n, "/", len(tours))
-    print("Current tour", current_cost, current_tour)
-    print("Shortest so far: ", cheapest, cheapest_tour)
-
 def create_nodes(n):
     nodes = []
     for i in range(n):
@@ -185,9 +150,10 @@ edges = create_edges(nodes)
 a = ['a', 'b', 'c', 'd']
 
 tours = list(itertools.permutations(a))
+print(tours)
 print(len(tours))
 
-enumerate(edges, screen)
+enumerate(nodes, screen)
 
 exit = False
 while(not exit):

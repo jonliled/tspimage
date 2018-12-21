@@ -1,0 +1,129 @@
+#!/usr/bin/env python
+
+import numpy as np
+import pygame
+import random
+import itertools
+
+################################################################################
+################################ Pygame ######################################## 
+################################################################################
+
+display_width  = 800
+display_height = 600
+x_min = 10
+y_min = 10
+x_max = display_width - 10
+y_max = display_height - 10
+
+pygame.init()
+screen = pygame.display.set_mode((display_width, display_height))
+
+################################################################################
+################################ Colours ####################################### 
+################################################################################
+
+
+black = (0,0,0)
+white = (255,255,255)
+red   = (255,0,0)
+green = (0,255,0)
+blue  = (0,0,255)
+
+
+
+################################################################################
+################################ Variables ##################################### 
+################################################################################
+
+
+
+
+################################################################################
+################################ Functions ##################################### 
+################################################################################
+
+
+def distance(start_node, end_node):
+    x1 = start_node[1]
+    x2 = end_node[1]
+    y1 = start_node[2]
+    y2 = end_node[2]
+    return np.sqrt((x2-x1)**2 + (y2-y1)**2)
+
+def create_nodes(n):
+    nodes = []
+    for i in range(n):
+        x = random.randint(x_min, x_max)
+        y = random.randint(y_min, y_max)
+        nodes.append([i, x, y])
+    nodes_array = np.array(nodes)
+    return nodes
+
+def create_edges(nodes):
+    edges = []
+    for i, node_i in enumerate(nodes):
+        for j, node_j in enumerate(nodes):
+            if i == j:
+                continue
+            node_start = node_i
+            node_end = node_j
+            length = distance(node_start, node_end)
+            edges.append([i, j, length])
+    edges = np.array(edges)
+    return edges
+
+'''
+Function which draws all edges in a table of edges to the screen
+-- Inputs --
+- screen: The surface on which to draw
+- edges: An array of edges
+
+-- Outputs --
+- Draws edges on the screen
+'''
+def draw(screen, edges, nodes, colour='#000000', weight=1):
+    for edge in edges:
+        sn = int(edge[0])
+        en = int(edge[1])
+        start = (nodes[sn][1], nodes[sn][2])
+        end = (nodes[en][1], nodes[en][2])
+        pygame.draw.line(screen, colour, start, end, weight)
+
+
+''' Perform a full enumeration on a set of nodes and edges to find the
+optimal solution to a TSP'''
+def brute(screen, nodes, edges):
+    best = None
+
+    for node in nodes:
+        print(node[0])
+
+
+################################################################################
+################################ Main ########################################## 
+################################################################################
+
+n = 8
+nodes = create_nodes(n)
+
+a = nodes[0]
+
+edges = create_edges(nodes)
+
+brute(screen, nodes, edges)
+
+exit = False
+while(not exit):
+    for event in pygame.event.get():
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_q:
+                exit = True
+            if event.key == pygame.K_SPACE:
+                nodes = create_nodes(n)
+                edges = create_edges(nodes)
+    screen.fill(white)
+    draw(screen, edges, nodes, colour=black, weight=3)
+    pygame.display.update()
+pygame.quit()
+quit()
