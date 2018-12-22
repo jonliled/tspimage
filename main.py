@@ -27,9 +27,10 @@ screen = pygame.display.set_mode((display_width, display_height))
 
 black = (0,0,0)
 white = (255,255,255)
-red   = (255,0,0)
-green = (0,255,0)
-blue  = (0,0,255)
+red   = (170, 57, 57)
+green = (122, 159, 53)
+blue  = (34, 102, 102)
+lblue = (102, 153, 153)
 
 
 
@@ -77,6 +78,15 @@ def create_edges(nodes):
 
 
 def draw_full(screen, edges, nodes, colour=black, width=3):
+        
+    for node in nodes:
+        x = node[1]
+        y = node[2]
+        txt = str(node[0])
+
+        pygame.draw.circle(screen, colour, (x,y), 5, 0)
+        text_to_screen(txt, black, (x -20,y -20))
+
     for edge in edges:
 
         ns = int(edge[0])
@@ -96,12 +106,6 @@ def draw_full(screen, edges, nodes, colour=black, width=3):
 def draw_route(screen, route, nodes, colour=black, width=3):
     for i, n in enumerate(route):
         pygame.draw.circle(screen, colour, (nodes[n][1], nodes[n][2]), 5, 0)
-        x = nodes[route[i]][1] - 20
-        y = nodes[route[i]][2] - 20
-        pos = (x,y)
-        txt = str(nodes[route[i]][0])
-        
-        text_to_screen(txt, black, pos)
 
     for i, n in enumerate(route[:-1]):
         xs = nodes[route[i]][1]
@@ -113,7 +117,14 @@ def draw_route(screen, route, nodes, colour=black, width=3):
         end = (xe, ye)
         pygame.draw.line(screen, colour, start, end, width)
 
+        x = nodes[route[i]][1] - 20
+        y = nodes[route[i]][2] - 20
+        pos = (x,y)
+        txt = str(nodes[route[i]][0])
+
+        text_to_screen(txt, black, pos)
         
+
 def route_permutations(nodes):
     nodelist = [i for i in range(len(nodes))]
     routes = list(itertools.permutations(nodelist))
@@ -128,125 +139,106 @@ def route_permutations(nodes):
         route.append(current)
     return route
 
+
 def route_length(route, nodes):
     length = 0
     for i, r in enumerate(route[:-1]):
         length += distance(nodes[route[i]], nodes[route[i+1]])
         return length
 
+
 def text_to_screen(txt, colour, pos):
     screen_text = font.render(txt, True, colour)
     screen.blit(screen_text, pos)
 
-''' Perform a full enumeration on a set of nodes and edges to find the
-optimal solution to a TSP'''
-def brute(screen, nodes, edges):
-    length = None
-    shortest_route = None
 
-    print("Creating list of all possible permutations...")
+def full_enumeration(screen, nodes):
+    edges = create_edges(nodes)
 
     routes = route_permutations(nodes)
 
-    print("Done!\n")
+    shortest = None
+    shortest_route = None
+    for route in routes:
+        length = route_length(route, nodes)
+        if shortest == None:
+            shortest = length
+            shortest_route = route
+        if length < shortest:
+            shortest = length
+            shortest_route = route
 
-    print("Calculating the length of each route...")
+        screen.fill(blue)
+    
+        if not shortest_route == None:
+            draw_route(screen, shortest_route, nodes, green, 3)
 
-    # Start of loop
-    for current_route in routes:
+        draw_route(screen, route, nodes, lblue, 3)
 
-        screen.fill(white)
-        # Draw current and shortest routes
-        draw_route(screen, current_route, nodes, black, 5)
-        if shortest_route != None:
-#            draw_route(screen, shortest_route, nodes, c, 3)
-            pass
-        current_length = route_length(current_route, nodes)
-        if length == None:
-            length = current_length
-            shortest_route = current_route
-        else:
-            if (current_length < length):
-                length = current_length
-                shortest_route = current_route
+        pygame.draw.line(screen, black, (0, y_max), (display_width, y_max), 3)
 
-        text_to_screen("Current route:", black, [450,425])
-        text_to_screen(str(current_route), black, [600,425])
+       
+        text_to_screen("Full enumeration", black, (display_width/2 - 40, y_max + 10))
 
-        text_to_screen("Current length:", black, [450,450])
-        text_to_screen(str(current_length), black, [600,450])
-        
-        text_to_screen("Shortest route:", black, [450,475])
-        text_to_screen(str(shortest_route), black, [600,475])
-        
-        text_to_screen("Shortest length:", black, [450,500])
-        text_to_screen(str(length), black, [600,500])
+        text_to_screen("Current route:", black, (20, y_max + 50))
+        text_to_screen(str(route), black, (150, y_max + 50))
+        text_to_screen("Length:", black, (325, y_max + 50))
+        text_to_screen(str(length)[:5], black, (425, y_max + 50))
 
+        text_to_screen("Shortest route:", black, (20, y_max + 70))
+        text_to_screen(str(shortest_route), black, (150, y_max + 70))
+        text_to_screen("Length:", black, (325, y_max + 70))
+        text_to_screen(str(shortest)[:5], black, (425, y_max + 70))
+    
         pygame.display.update()
 
-    print("Done!\n")
-    print("Shortest route:", shortest_route)
-    print("Length: ", length)
-    
-    return (shortest_route, length)
+    screen.fill(blue)
+    draw_route(screen, shortest_route, nodes, green, 3)
+    pygame.draw.line(screen, black, (0, y_max), (display_width, y_max), 3)
 
+    text_to_screen("Full enumeration", black, (display_width/2 - 40, y_max + 10))
+
+    text_to_screen("Shortest route:", black, (20, y_max + 70))
+    text_to_screen(str(shortest_route), black, (150, y_max + 70))
+    text_to_screen("Length:", black, (325, y_max + 70))
+    text_to_screen(str(shortest)[:5], black, (425, y_max + 70))
+
+    pygame.display.update()
+
+
+def nearest_neighbour(screen, nodes, edges):
+    route = []
+    length = 0
+    nodelist = nodes
+    current_node = 0
+    next_node = None
+    edgelist = np.empty([1,3])
+    print(edgelist)
+    while (len(nodelist) > 0):
+        for edge in edges:
+            if edge[0] == current_node:
+                edgelist = np.vstack([edgelist, edge])
+                for edge in edgelist:
+                    if edge[2] == min(edgelist[:,2]):
+                        next_node = edge[1]
+                        edges = np.delete(edges, (edgelist), axis=0)
+    print(route)
 
 ################################################################################
 ################################ Main ########################################## 
 ################################################################################
 
 
-print("\n-- Start of program --\n")
-
-
-n = 8
+n = 4
 nodes = create_nodes(n)
-
-test_nodes = np.array(
-   [[0, 500, 300], 
-    [1, 100, 550],
-    [2, 250, 20],
-    [3, 300, 300]],
-)
-
 edges = create_edges(nodes)
 
-routes = route_permutations(nodes)
 
-shortest = None
-shortest_route = None
-for route in routes:
-    if n < 7:
-        clock.tick(20)
-    length = route_length(route, nodes)
-    if shortest == None:
-        shortest = length
-        shortest_route = route
-    if length < shortest:
-        shortest = length
-        shortest_route = route
+screen.fill(blue)
+draw_full(screen, edges, nodes)
+pygame.draw.line(screen, black, (0, y_max), (display_width, y_max), 3)
 
-    screen.fill(white)
-    
-    if not shortest_route == None:
-        draw_route(screen, shortest_route, nodes, green, 3)
-
-    draw_route(screen, route, nodes, black, 3)
-
-    pygame.draw.line(screen, black, (0, y_max), (display_width, y_max), 3)
-
-    text_to_screen("Current route:", black, (20, y_max + 10))
-    text_to_screen(str(route), black, (150, y_max + 10))
-    text_to_screen("Length:", black, (300, y_max + 10))
-    text_to_screen(str(length)[:5], black, (375, y_max + 10))
-
-    text_to_screen("Shortest route:", black, (20, y_max + 30))
-    text_to_screen(str(shortest_route), black, (150, y_max + 30))
-    text_to_screen("Length:", black, (300, y_max + 30))
-    text_to_screen(str(shortest)[:5], black, (375, y_max + 30))
-    
-    pygame.display.update()
-
+pygame.display.update()
 
 exit = False
 while(not exit):
@@ -254,13 +246,18 @@ while(not exit):
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_q:
                 exit = True
+
             if event.key == pygame.K_SPACE:
                 nodes = create_nodes(n)
                 edges = create_edges(nodes)
-#    draw(screen, edges, nodes, colour=black, width=3)
+                screen.fill(blue)
+                draw_full(screen, edges, nodes)
+                pygame.draw.line(screen, black, (0, y_max), (display_width, y_max), 3)
+                pygame.display.update()
 
+            if event.key == pygame.K_e:
+                full_enumeration(screen, nodes)
 
-print("\n-- End of program --\n")
 
 pygame.quit()
 quit()
